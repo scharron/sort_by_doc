@@ -59,23 +59,13 @@ public class SortByDocQueryParser implements QueryParser {
     public static final String NAME = "sort_by_doc";
     private ScoringDocumentCache scoringDocumentCache;
 
-    public static final String EXECUTION_KEY = "execution";
-    public static final String EXECUTION_VALUE_PLAIN = "plain";
-    public static final String EXECUTION_VALUE_FIELDDATA = "fielddata";
-    public static final String EXECUTION_VALUE_BOOL = "bool";
-    public static final String EXECUTION_VALUE_BOOL_NOCACHE = "bool_nocache";
-    public static final String EXECUTION_VALUE_AND = "and";
-    public static final String EXECUTION_VALUE_AND_NOCACHE = "and_nocache";
-    public static final String EXECUTION_VALUE_OR = "or";
-    public static final String EXECUTION_VALUE_OR_NOCACHE = "or_nocache";
-
     @Inject
     public SortByDocQueryParser() {
     }
 
     @Override
     public String[] names() {
-        return new String[]{NAME, "in"};
+        return new String[]{NAME};
     }
 
     @Inject(optional = true)

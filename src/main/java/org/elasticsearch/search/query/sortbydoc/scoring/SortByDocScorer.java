@@ -4,37 +4,60 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * samuel
  * 23/10/15, 15:18
  */
 class SortByDocScorer extends Scorer {
-    private final SortByDocIterator iterator;
+    private final Scorer scorer;
+    private Map<Integer, Float> scores;
 
-    public SortByDocScorer(SortByDocIterator iterator, Weight weight) {
+    public SortByDocScorer(Scorer scorer, Map<Integer, Float> scores, Weight weight) {
         super(weight);
-        this.iterator = iterator;
+        this.scorer = scorer;
+        this.scores = scores;
     }
 
     @Override
     public int docID() {
-        return iterator.docID();
+        return scorer.docID();
     }
 
     @Override
     public int nextDoc() throws IOException {
-        return iterator.nextDoc();
+        while (true) {
+            if (scorer == null)
+                return NO_MORE_DOCS;
+            int docId = scorer.nextDoc();
+            if (docId == NO_MORE_DOCS)
+                return NO_MORE_DOCS;
+            if (scores.containsKey(docId)) {
+                return docId;
+            }
+        }
     }
 
     @Override
     public int advance(int target) throws IOException {
-        return iterator.advance(target);
+        if (scorer == null)
+            return NO_MORE_DOCS;
+        int docId = scorer.advance(target);
+        if (docId == NO_MORE_DOCS)
+            return NO_MORE_DOCS;
+        // We advanced, but if the document was not in our score set (for whatever reason)
+        // then we go to the next valid document by calling nextDoc
+        if (scores.containsKey(docId))
+            return docId;
+        return nextDoc();
     }
 
     @Override
     public long cost() {
-        return iterator.cost();
+        if (scorer == null)
+            return 0;
+        return scorer.cost();
     }
 
     @Override
@@ -44,6 +67,8 @@ class SortByDocScorer extends Scorer {
 
     @Override
     public float score() throws IOException {
-        return iterator.docScore();
+        if (scorer == null)
+            return 0;
+        return scores.get(scorer.docID());
     }
 }

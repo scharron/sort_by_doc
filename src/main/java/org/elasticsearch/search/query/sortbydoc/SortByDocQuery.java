@@ -4,11 +4,11 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.ToStringUtils;
-import org.elasticsearch.common.lucene.search.function.FiltersFunctionScoreQuery;
 import org.elasticsearch.search.query.sortbydoc.scoring.SortByDocWeight;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * samuel
@@ -37,9 +37,15 @@ public class SortByDocQuery extends Query {
 
     @Override
     public Weight createWeight(IndexSearcher searcher) throws IOException {
-        return new SortByDocWeight(this, fieldName, scores);
+        return new SortByDocWeight(this, fieldName, scores, subQuery.createWeight(searcher));
     }
 
+    @Override
+    public void extractTerms(Set<Term> terms) {
+        this.subQuery.extractTerms(terms);
+    }
+
+    @Override
     public String toString(String field) {
         StringBuilder sb = new StringBuilder();
         sb.append("sort by doc (")
@@ -48,17 +54,22 @@ public class SortByDocQuery extends Query {
         return sb.toString();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass())
             return false;
-        FiltersFunctionScoreQuery other = (FiltersFunctionScoreQuery) o;
-        if (!this.subQuery.equals(other.getSubQuery())) {
+        SortByDocQuery other = (SortByDocQuery) o;
+        if (!this.subQuery.equals(other.subQuery)) {
+            return false;
+        }
+        if (!this.scores.equals(other.scores)) {
             return false;
         }
         return true;
     }
 
+    @Override
     public int hashCode() {
-        return subQuery.hashCode() + 31 ^ Float.floatToIntBits(getBoost());
+        return subQuery.hashCode() + 31 * scores.hashCode() ^ Float.floatToIntBits(getBoost());
     }
 }

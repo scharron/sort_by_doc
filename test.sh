@@ -28,11 +28,11 @@ request "Creating index" -XPOST localhost:9200/test -d '{
     }
 }'
 
-request "Inserting documents" -XPUT localhost:9200/test/my_docs/doc_1 -d '{"a_field": 1}'
-request "" -XPUT localhost:9200/test/my_docs/doc_2 -d '{"a_field": 2}'
-request "" -XPUT localhost:9200/test/my_docs/doc_3 -d '{"a_field": 3}'
-request "" -XPUT localhost:9200/test/my_docs/doc_4 -d '{"a_field": 4}'
-request "" -XPUT localhost:9200/test/my_docs/doc_5 -d '{"a_field": 5}'
+request "Inserting documents" -XPUT localhost:9200/test/my_docs/doc_1 -d '{"a_field": "a"}'
+request "" -XPUT localhost:9200/test/my_docs/doc_2 -d '{"a_field": "b"}'
+request "" -XPUT localhost:9200/test/my_docs/doc_3 -d '{"a_field": "a"}'
+request "" -XPUT localhost:9200/test/my_docs/doc_4 -d '{"a_field": "a"}'
+request "" -XPUT localhost:9200/test/my_docs/doc_5 -d '{"a_field": "a"}'
 
 request "Inserting sorting document" -XPUT localhost:9200/test/docs_to_sort/pouet -d '{
     "sort_field": [ 
@@ -46,10 +46,11 @@ request "Inserting sorting document" -XPUT localhost:9200/test/docs_to_sort/poue
 
 
 echo "Sleeping 1 second (indexation time)..."
-sleep 1
+sleep 3
 
 
 request "Performing the query" -XGET localhost:9200/test/my_docs/_search -d '{
+    "explain": true,
     "query": {
         "sort_by_doc": {
             "type": "docs_to_sort",
@@ -58,7 +59,9 @@ request "Performing the query" -XGET localhost:9200/test/my_docs/_search -d '{
             "id": "id",
             "score": "score",
             "query": {
-                "match_all": {}
+                "term": {
+                    "a_field": "a"
+                }
             }
         }
     }
