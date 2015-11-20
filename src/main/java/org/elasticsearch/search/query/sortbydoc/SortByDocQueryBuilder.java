@@ -3,7 +3,6 @@ package org.elasticsearch.search.query.sortbydoc;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.BaseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermsFilterParser;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
@@ -117,7 +116,7 @@ public class SortByDocQueryBuilder extends BaseQueryBuilder {
         builder.field("root", rootPath);
         builder.field("id", idField);
         builder.field("score", scoreField);
-        builder.field("sort_order", sortOrder);
+        builder.field("sort_order", sortOrder.name());
 
         builder.endObject();
     }

@@ -39,6 +39,7 @@ import org.elasticsearch.search.query.sortbydoc.utils.ScoringDocumentCache;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -122,7 +123,7 @@ public class SortByDocQueryParser implements QueryParser {
                     try {
                         sortOrder = SortOrder.valueOf(parser.text());
                     } catch (IllegalArgumentException e) {
-                        throw new QueryParsingException(parseContext.index(), "[sort_by_doc] sort_order should be one of " + SortOrder.values());
+                        throw new QueryParsingException(parseContext.index(), "[sort_by_doc] sort_order should be one of " + Arrays.toString(SortOrder.values()));
                     }
                 } else {
                     throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query does not support [" + currentFieldName + "] within lookup element");
