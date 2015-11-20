@@ -98,7 +98,7 @@ public class SortByDocQueryBuilder extends BaseQueryBuilder {
 
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(TermsFilterParser.NAME);
+        builder.startObject(SortByDocQueryParser.NAME);
 
         if (lookupIndex != null) {
             builder.field("index", lookupIndex);
