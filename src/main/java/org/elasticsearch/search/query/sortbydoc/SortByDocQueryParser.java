@@ -52,6 +52,7 @@ import java.util.Map;
  *  "id": "field_for_ids"
  *  "score": "field_for_score"
  *  "query": {...}
+ *  "sort_order: "ASC / DESC"
  * }
  * </pre>
  */
@@ -87,6 +88,7 @@ public class SortByDocQueryParser implements QueryParser {
         String idField = null;
         String scoreField = null;
         String lookupRouting = null;
+        SortOrder sortOrder = SortOrder.DESC;
         Query subQuery = null;
 
         XContentParser.Token token;
@@ -115,6 +117,12 @@ public class SortByDocQueryParser implements QueryParser {
                     scoreField = parser.text();
                 } else if ("routing".equals(currentFieldName)) {
                     lookupRouting = parser.textOrNull();
+                } else if ("sort_order".equals(currentFieldName)) {
+                    try {
+                        sortOrder = SortOrder.valueOf(parser.text());
+                    } catch (IllegalArgumentException e) {
+                        throw new QueryParsingException(parseContext.index(), "[sort_by_doc] sort_order should be one of " + SortOrder.values());
+                    }
                 } else {
                     throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query does not support [" + currentFieldName + "] within lookup element");
                 }
@@ -161,7 +169,7 @@ public class SortByDocQueryParser implements QueryParser {
             BytesRef[] keyUids = Uid.createTypeUids(parseContext.queryTypes(), score.getKey());
             for (BytesRef keyUid : keyUids) {
                 Term t = new Term(UidFieldMapper.NAME, keyUid);
-                termsScores.put(t, score.getValue());
+                termsScores.put(t, sortOrder.equals(SortOrder.DESC) ? score.getValue() : -score.getValue());
             }
         }
 

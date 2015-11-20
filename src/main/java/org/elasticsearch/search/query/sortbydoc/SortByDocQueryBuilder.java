@@ -21,6 +21,7 @@ public class SortByDocQueryBuilder extends BaseQueryBuilder {
     private String idField;
     private String scoreField;
     private QueryBuilder subQuery;
+    private SortOrder sortOrder;
 
     /**
      * Sets the query to filter & sort
@@ -86,6 +87,14 @@ public class SortByDocQueryBuilder extends BaseQueryBuilder {
         return this;
     }
 
+    /**
+     * Sets the field name to retrieve scores in objects found at rootPath
+     */
+    public SortByDocQueryBuilder sortOrder(SortOrder sortOrder) {
+        this.sortOrder = sortOrder;
+        return this;
+    }
+
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(TermsFilterParser.NAME);
@@ -107,6 +116,7 @@ public class SortByDocQueryBuilder extends BaseQueryBuilder {
         builder.field("root", rootPath);
         builder.field("id", idField);
         builder.field("score", scoreField);
+        builder.field("sort_order", sortOrder);
 
         builder.endObject();
     }
