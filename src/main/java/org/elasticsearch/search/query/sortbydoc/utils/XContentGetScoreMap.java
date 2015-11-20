@@ -36,7 +36,7 @@ public class XContentGetScoreMap {
             Object itemKey = item.get(key);
             Object itemVal = item.get(val);
 
-            if ((itemKey != null && itemKey instanceof String) && (itemVal == null || itemVal instanceof Number)) {
+            if ((itemKey != null && itemKey instanceof String) && (itemVal != null || itemVal instanceof Number)) {
                 values.put((String) itemKey, ((Number)itemVal).floatValue());
             }
         }
