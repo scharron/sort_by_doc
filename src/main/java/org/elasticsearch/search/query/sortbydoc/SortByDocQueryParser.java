@@ -36,6 +36,7 @@ import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.search.internal.SearchContext;
 import org.elasticsearch.search.query.sortbydoc.utils.ScoresLookup;
 import org.elasticsearch.search.query.sortbydoc.utils.ScoringDocumentCache;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
 import java.util.HashMap;

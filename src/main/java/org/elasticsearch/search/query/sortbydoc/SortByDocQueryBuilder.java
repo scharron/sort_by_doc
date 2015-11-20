@@ -4,6 +4,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.BaseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.TermsFilterParser;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
 
