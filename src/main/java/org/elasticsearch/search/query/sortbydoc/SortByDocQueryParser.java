@@ -175,6 +175,10 @@ public class SortByDocQueryParser implements QueryParser {
             }
         }
 
+        if (scores.isEmpty()) {
+            return subQuery;
+        }
+
         Filter filter = fieldMapper.termsFilter(scores.keySet().asList(), parseContext);
 
         return new SortByDocQuery(fieldName, subQuery, filter, termsScores);
