@@ -6,7 +6,6 @@ import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableMap;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.RamUsageEstimator;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
@@ -18,8 +17,6 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -75,6 +72,8 @@ public class ScoringDocumentCache extends AbstractComponent {
     }
 
     public ImmutableMap<String, Float> getScores(final ScoresLookup lookup) {
+        return getDocument(lookup).scores;
+        /* Cache deactivated since we cannot clean it from the normal ES API because we are using a custom cache (to store a Map<> instead of only Terms)
         BytesRef key = new BytesRef(lookup.toString());
 
         try {
@@ -90,6 +89,7 @@ public class ScoringDocumentCache extends AbstractComponent {
             }
             throw new ElasticsearchException(e.getMessage(), e.getCause());
         }
+        */
     }
 
     private long estimateSizeInBytes(Map<String, Float> scores) {

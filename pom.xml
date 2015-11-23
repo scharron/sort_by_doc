@@ -3,7 +3,7 @@
 	<groupId>org.elasticsearch</groupId>
 	<artifactId>sort-by-doc</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.7</version>
+	<version>0.0.8</version>
 	<name>sort-by-doc</name>
 	<properties>
 		<elasticsearch.version>1.7.3</elasticsearch.version>
