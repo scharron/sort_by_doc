@@ -1,16 +1,16 @@
 package org.elasticsearch.search.query.sortbydoc.scoring;
 
-import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.DocsEnum;
+import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.*;
-import org.apache.lucene.util.Bits;
 import org.elasticsearch.index.mapper.internal.UidFieldMapper;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * samuel
@@ -23,6 +23,7 @@ public class SortByDocWeight extends Weight {
     private Query query;
 
     public SortByDocWeight(Query query, String fieldName, Map<Term, Float> scores, Weight subWeight) {
+        super(query);
         this.scores = scores;
         this.query = query;
         this.fieldName = fieldName;
@@ -30,18 +31,14 @@ public class SortByDocWeight extends Weight {
     }
 
     @Override
-    public Explanation explain(AtomicReaderContext context, int doc) throws IOException {
-        final ComplexExplanation explanation = new ComplexExplanation();
-        explanation.setDescription("sort_by_doc");
+    public Explanation explain(LeafReaderContext context, int doc) throws IOException {
         Float score = getScores(context).get(doc);
-        explanation.setValue(score);
-        explanation.addDetail(subWeight.explain(context, doc));
+        final Explanation explanation = Explanation.match(score, "sort_by_doc", subWeight.explain(context, doc));
         return explanation;
     }
 
     @Override
-    public Query getQuery() {
-        return query;
+    public void extractTerms(Set<Term> set) {
     }
 
     @Override
@@ -57,13 +54,13 @@ public class SortByDocWeight extends Weight {
 
 
     @Override
-    public Scorer scorer(AtomicReaderContext context, Bits acceptDocs) throws IOException {
-        return new SortByDocScorer(subWeight.scorer(context, acceptDocs), getScores(context), this);
+    public Scorer scorer(LeafReaderContext context) throws IOException {
+        return new SortByDocScorer(subWeight.scorer(context), getScores(context), this);
     }
 
-    private Map<Integer, Float> getScores(AtomicReaderContext context) throws IOException {
+    private Map<Integer, Float> getScores(LeafReaderContext context) throws IOException {
         Map<Integer, Float> scores = new HashMap<>();
-        TermsEnum termsIterator = context.reader().fields().terms(UidFieldMapper.NAME).iterator(null);
+        TermsEnum termsIterator = context.reader().fields().terms(UidFieldMapper.NAME).iterator();
         for (Map.Entry<Term, Float> score : this.scores.entrySet()) {
             if (!termsIterator.seekExact(score.getKey().bytes())) {
                 // Term not found

@@ -8,7 +8,6 @@ import org.elasticsearch.search.query.sortbydoc.scoring.SortByDocWeight;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * samuel
@@ -19,9 +18,11 @@ public class SortByDocQuery extends Query {
     private Query subQuery;
     private Map<Term, Float> scores;
 
-    SortByDocQuery(String fieldName, Query subQuery, Filter filter, Map<Term, Float> scores) {
+    SortByDocQuery(String fieldName, Query subQuery, Query filter, Map<Term, Float> scores) {
         this.fieldName = fieldName;
-        this.subQuery = new FilteredQuery(subQuery, filter);
+        this.subQuery = new BooleanQuery.Builder()
+                .add(subQuery, BooleanClause.Occur.MUST)
+                .add(filter, BooleanClause.Occur.FILTER).build();
         this.scores = scores;
     }
 
@@ -36,13 +37,8 @@ public class SortByDocQuery extends Query {
     }
 
     @Override
-    public Weight createWeight(IndexSearcher searcher) throws IOException {
-        return new SortByDocWeight(this, fieldName, scores, subQuery.createWeight(searcher));
-    }
-
-    @Override
-    public void extractTerms(Set<Term> terms) {
-        this.subQuery.extractTerms(terms);
+    public Weight createWeight(IndexSearcher searcher, boolean needsScores) throws IOException {
+        return new SortByDocWeight(this, fieldName, scores, subQuery.createWeight(searcher, needsScores));
     }
 
     @Override

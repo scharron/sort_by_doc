@@ -1,7 +1,6 @@
 package org.elasticsearch.search.query.sortbydoc;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.BaseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
@@ -11,7 +10,7 @@ import java.io.IOException;
  * samuel
  * 19/11/15, 15:57
  */
-public class SortByDocQueryBuilder extends BaseQueryBuilder {
+public class SortByDocQueryBuilder extends QueryBuilder {
     private String lookupIndex;
     private String lookupType;
     private String lookupId;

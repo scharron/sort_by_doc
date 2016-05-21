@@ -15,13 +15,12 @@
  */
 package org.elasticsearch.plugin.sortbydoc;
 
-import org.elasticsearch.common.inject.Module;
-import org.elasticsearch.indices.query.IndicesQueriesModule;
-import org.elasticsearch.plugins.AbstractPlugin;
+import org.elasticsearch.indices.IndicesModule;
+import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.query.sortbydoc.SortByDocQueryParser;
 
 
-public class SortByDocPlugin extends AbstractPlugin {
+public class SortByDocPlugin extends Plugin {
 
     @Override
     public String name() {
@@ -33,12 +32,8 @@ public class SortByDocPlugin extends AbstractPlugin {
         return "Sort documents by the content of another document";
     }
 
-    @Override
-    public void processModule(final Module module) {
-
-    	if(module instanceof IndicesQueriesModule)
-    	{
-    		((IndicesQueriesModule) module).addQuery(SortByDocQueryParser.class);
-    	}
+    public void onModule(IndicesModule indicesModule) {
+        indicesModule.registerQueryParser(SortByDocQueryParser.class);
     }
+
 }

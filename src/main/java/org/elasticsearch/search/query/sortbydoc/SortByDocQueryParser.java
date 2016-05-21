@@ -20,15 +20,12 @@ package org.elasticsearch.search.query.sortbydoc;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.mapper.FieldMapper;
-import org.elasticsearch.index.mapper.MapperService;
+import org.elasticsearch.index.mapper.MappedFieldType;
 import org.elasticsearch.index.mapper.Uid;
-import org.elasticsearch.index.mapper.internal.IdFieldMapper;
 import org.elasticsearch.index.mapper.internal.UidFieldMapper;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.QueryParser;
@@ -80,7 +77,6 @@ public class SortByDocQueryParser implements QueryParser {
     public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-        MapperService.SmartNameFieldMappers smartNameFieldMappers;
         String currentFieldName = null;
 
         String lookupIndex = parseContext.index().name();
@@ -123,52 +119,62 @@ public class SortByDocQueryParser implements QueryParser {
                     try {
                         sortOrder = SortOrder.valueOf(parser.text());
                     } catch (IllegalArgumentException e) {
-                        throw new QueryParsingException(parseContext.index(), "[sort_by_doc] sort_order should be one of " + Arrays.toString(SortOrder.values()));
+                        throw new QueryParsingException(parseContext, "[sort_by_doc] sort_order should be one of " + Arrays.toString(SortOrder.values()));
                     }
                 } else {
-                    throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query does not support [" + currentFieldName + "] within lookup element");
+                    throw new QueryParsingException(parseContext, "[sort_by_doc] query does not support [" + currentFieldName + "] within lookup element");
                 }
             }
         }
         if (lookupType == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query lookup element requires specifying the type");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query lookup element requires specifying the type");
         }
         if (lookupId == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query lookup element requires specifying the doc_id");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query lookup element requires specifying the doc_id");
         }
         if (rootPath == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query lookup element requires specifying the path");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query lookup element requires specifying the path");
         }
         if (idField == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query lookup element requires specifying the id");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query lookup element requires specifying the id");
         }
         if (scoreField == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query lookup element requires specifying the score");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query lookup element requires specifying the score");
         }
 
         if (subQuery == null) {
-            throw new QueryParsingException(parseContext.index(), "[sort_by_doc] query requires a subquery");
+            throw new QueryParsingException(parseContext, "[sort_by_doc] query requires a subquery");
         }
 
         String fieldName = "_id";
+        MappedFieldType _idType = parseContext.mapperService().smartNameFieldType(fieldName);
+
+        /*
         FieldMapper fieldMapper = null;
-        smartNameFieldMappers = parseContext.smartFieldMappers(fieldName);
+        smartNameFieldMappers = parseContext.mapperService().smartFieldMappers(fieldName);
         if (smartNameFieldMappers != null) {
             if (smartNameFieldMappers.hasMapper()) {
                 fieldMapper = smartNameFieldMappers.mapper();
                 fieldName = fieldMapper.names().indexName();
             }
         }
+        */
 
+        /*
         if (fieldMapper == null || !(fieldMapper instanceof IdFieldMapper))
             throw new QueryParsingException(parseContext.index(), "[sort_by_doc] the _id field must be a defaultly indexed UID field");
+        */
+
+        if (_idType == null)
+            throw new QueryParsingException(parseContext, "[sort_by_doc] the _id field must be a defaultly indexed UID field");
 
         // external lookup, use it
         ScoresLookup scoresLookup = new ScoresLookup(lookupIndex, lookupType, lookupId, lookupRouting, rootPath, idField, scoreField, parseContext, SearchContext.current());
         ImmutableMap<String, Float> scores = scoringDocumentCache.getScores(scoresLookup);
         Map<Term, Float> termsScores = new HashMap<>();
         for (Map.Entry<String, Float> score : scores.entrySet()) {
-            BytesRef[] keyUids = Uid.createTypeUids(parseContext.queryTypes(), score.getKey());
+            Uid.createUidsForTypesAndId(parseContext.queryTypes(), score.getKey());
+            BytesRef[] keyUids = Uid.createUidsForTypesAndId(parseContext.queryTypes(), score.getKey());
             for (BytesRef keyUid : keyUids) {
                 Term t = new Term(UidFieldMapper.NAME, keyUid);
                 termsScores.put(t, sortOrder.equals(SortOrder.DESC) ? score.getValue() : -score.getValue());
@@ -179,7 +185,7 @@ public class SortByDocQueryParser implements QueryParser {
             return subQuery;
         }
 
-        Filter filter = fieldMapper.termsFilter(scores.keySet().asList(), parseContext);
+        Query filter = _idType.termsQuery(scores.keySet().asList(), parseContext);
 
         return new SortByDocQuery(fieldName, subQuery, filter, termsScores);
     }

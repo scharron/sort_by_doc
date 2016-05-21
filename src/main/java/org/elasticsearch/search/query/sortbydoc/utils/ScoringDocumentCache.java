@@ -37,9 +37,9 @@ public class ScoringDocumentCache extends AbstractComponent {
         super(settings);
         this.client = client;
 
-        ByteSizeValue size = componentSettings.getAsBytesSize("size", new ByteSizeValue(10, ByteSizeUnit.MB));
-        TimeValue expireAfterWrite = componentSettings.getAsTime("expire_after_write", null);
-        TimeValue expireAfterAccess = componentSettings.getAsTime("expire_after_access", null);
+        ByteSizeValue size = settings.getAsBytesSize("size", new ByteSizeValue(10, ByteSizeUnit.MB));
+        TimeValue expireAfterWrite = settings.getAsTime("expire_after_write", null);
+        TimeValue expireAfterAccess = settings.getAsTime("expire_after_access", null);
 
         CacheBuilder<BytesRef, ScoresEntry> builder = CacheBuilder.newBuilder()
                 .maximumWeight(size.bytes())

@@ -36,11 +36,7 @@ request "" -XPUT localhost:9200/test/my_docs/doc_5 -d '{"a_field": "a"}'
 
 request "Inserting sorting document" -XPUT localhost:9200/test/docs_to_sort/pouet -d '{
     "sort_field": [ 
-        { "id": "doc_5", "score": 1 },
-        { "id": "doc_1", "score": 2 },
-        { "id": "doc_2", "score": 3 },
-        { "id": "doc_3", "score": 4 },
-        { "id": "doc_6", "score": 5 }
+        { "id": "doc_5", "score": 1 }
     ]
 }'
 
@@ -49,18 +45,39 @@ echo "Sleeping 1 second (indexation time)..."
 sleep 3
 
 
-request "Performing the query" -XGET localhost:9200/test/my_docs/_search -d '{
+#request "Performing the query" -XGET localhost:9200/test/my_docs/_search -d '{
+#    "explain": true,
+#    "query": {
+#        "sort_by_doc": {
+#            "type": "docs_to_sort",
+#            "doc_id": "pouet",
+#            "root": "sort_field",
+#            "id": "id",
+#            "score": "score",
+#            "query": {
+#                "term": {
+#                    "a_field": "a"
+#                }
+#            }
+#        }
+#    }
+#}'
+
+request "Cleaning cache" -XPOST 'localhost:9200/test/_cache/clear?filter_keys=pouet'
+
+request "Performing the query" -XGET localhost:9200/test/my_docs/_search?pretty=1 -d '{
     "explain": true,
     "query": {
-        "sort_by_doc": {
-            "type": "docs_to_sort",
-            "doc_id": "pouet",
-            "root": "sort_field",
-            "id": "id",
-            "score": "score",
-            "query": {
-                "term": {
-                    "a_field": "a"
+        "filtered": {
+            "filter": {
+                "terms": {
+                    "_id": {
+                        "type": "docs_to_sort",
+                        "id": "pouet",
+                        "path": "sort_field.id"
+                    },
+                    "_cache": false,
+                    "_cache_key" : "pouet"
                 }
             }
         }
